@@ -1,4 +1,10 @@
 * yes_http
-** extract yapi module from http/index.yaws to src/
+
+
+
+** extract embedded module declaration 
+   - from http/index.yaws
 
 * yes_manager
+** remove compile_all
+   - from src/yes_queue.erl
