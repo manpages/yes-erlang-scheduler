@@ -1,5 +1,16 @@
 DESCRIPTION
 Opensource part of YES Erlang Scheduler.
+The reason behind spawning third repository for the same project
+is prosaic — I'll do massive refactoring of the code and project
+structire so that keeping the history of the source codes would
+be rather confusing for the repository viewer. Consider it as a
+self-contained properly designed project, and not even dare to 
+look at erlduler and otpduler repos, I'll keep them at github 
+for the sake of looking at my progress in mastering the proper
+Erlang toolchain.
+
+WIP
+Now I am adding rebar support for YES.
 
 LICENSE
 MIT, do whatever.
