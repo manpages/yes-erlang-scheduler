@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+</head>
+
+<body>
+	<form method="post">
+		<input type="text" name="input" />
+		<input type="submit" name="butt" />
+	</form>
+	Arg dump:
+	<pre><erl>
+		out(A) ->
+			{html, io_lib:format("~p", [A])}.
+	</erl></pre>
+	POST info:<br />
+	<pre><erl>
+		out(A) ->
+			case (erlang:element(2, A#arg.req)) of
+				'GET' -> {html, "undefined."};
+				'POST'-> {html, io_lib:format("~ts", [yapi:pk("input", A)])}
+			end.
+	</erl></pre>
+	<hr />
+	InternetSpaceships/2012
+	<erl module=yapi>
+		-compile(export_all).
+		
+		pk(K, A) -> %%% (p)ost(k)ey
+			case yapi:post(A) of
+				true -> yapi:e(2, lists:keyfind(K, 1, yaws_api:parse_post(A)));
+				_ -> undefined
+			end.
+
+		ck(K, A) -> %%% (c)ookie(k)ey
+			case yaws_api:find_cookie_val(K, A#arg.headers#headers.cookie) of
+				[] -> io:format("ck undefined!~n"),
+					undefined;
+				X  -> X
+			end.
+
+		e(N, NTuple) when is_tuple(NTuple) -> 
+			erlang:element(N, NTuple);
+
+		e(N, NTuple) -> undefined.
+
+		b(List) when is_list(List) ->
+			list_to_binary(List).
+
+		post(A) ->
+			case (erlang:element(2, A#arg.req)) of
+				'POST' -> true;
+				_ -> false
+			end.
+
+		sec() ->
+			{Mega, Secs, _} = now(),
+			Mega*1000000 + Secs.
+
+		msec() ->
+			{MS,S,Ms} = erlang:now(),
+			PSix = 1000000,
+			clg((MS*PSix*PSix+S*PSix+Ms)/1000).
+
+		flr(X) ->
+			case trunc(X) of 
+				Y when Y > X -> Y - 1; 
+				Z            -> Z
+			end.
+
+		clg(X) ->
+			case trunc(X) of 
+				Y when Y < X -> Y + 1; 
+				Z            -> Z
+			end.
+
+		out(A) -> {html,""}.
+	</erl>
+</body>
