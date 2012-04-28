@@ -1,0 +1,185 @@
+Fission is a very scalable, very fast, fully consistent, high-availability (when
+finished), persistent (currently limited by RAM) key-value storage system for
+Erlang in development by VeryPositive (http://verypositive.com). 
+
+Fission is developed to be used by Erlang applications only, by directly
+accessing the cluster via Erlang's own messaging system.
+
+The lack of an abstraction layer removes any usual limits and speed penalty,
+allowing to run any code directly on values. This in turn allows to atomically
+operate on complex structures in-place and make asynchronous parallel
+multi-level map-reduce-like requests.
+
+
+LICENSE
+
+The license is MIT - you can do whatever you wish.
+
+
+DISCLAIMER
+
+Fission is an incomplete product. See
+	https://bitbucket.org/verypositive/fission/issues
+for list of features it lacks.
+
+
+INSTALLATION
+
+
+1) clone the Hg repository:
+	
+	hg clone https://bitbucket.org/verypositive/fission
+
+2) go to the new directory:
+
+	cd fission
+	
+3) compile as usual:
+	
+	make
+	
+4) start Erlang VM:
+
+	erl -name something@your.host -pa ebin
+	
+5) start Fission
+	
+	application:start(fission).
+	
+6) initialize the tables (this only has to be done once)
+
+	fission:initialize(node()).
+
+
+That's it, have fun!
+
+When actually using Fission for an application, you'll probably want to run erl
+in the parent directory and adjust the path accordingly.
+
+
+BENCHMARKS
+
+
+1) Install as shown above. This will give you an unsplit table.
+
+2) Run the benchmark:
+	fission_test:benchmark().
+	
+3) Split the table to 16 blocks:
+	fission_test:split_to_16().
+	
+4) Run the benchmark again
+
+5) Delete everything in ebin and compile with HiPE
+	rm ebin/*.beam
+	make:all([load,native])
+	
+6) Run the benchmark again
+
+7) Re-read the code to make sure I didn't make any math errors
+
+
+USAGE
+
+User fission_* modules for interaction (everything but fission, fission_block
+and fission_util are client libraries). You'll have to read the module code for
+more information. They are kind of ugly and inflexible right now, but you can
+also send messages directly to fission.
+
+Interface to basic commands is provided by fission_syn and fission_asyn
+(synchronous and asynchronous, as you might guess).
+
+Both keys and values can be any Erlang term (you shouldn't use PIDs for keys
+though).
+
+The commands are:
+
+	set(Key, Value) -> ok
+		Key = Value = term()
+		
+	get(Key) -> {value, Value} | false
+	
+	run(Key, Function) -> {result, Result}
+	spawn(Key, Function) -> {result, Result}
+	
+		Function =
+			{Module, FF} |
+			{Module, FF, [Param1|...]} |
+			fun (Arg)
+				-> Result
+		FF = function (Arg, Param1, ...) -> Result
+		Arg = {value, Value} | false
+		Result = term()
+		
+		Runs a function on the key, returns the result.
+		run/2 runs the function in-place (thus locking the block),
+		spawn/2 spawns a new process (thus copying the value)
+		
+		The function for run and spawn can have side effects.
+		
+	run_set(Key, Function) -> {result, Result}
+	
+		Function =
+			{Module, FF} |
+			{Module, FF, [Param1|...]}  -- NOT a Fun
+		FF = function (Arg, Param1, ...) -> {NewValue, Result}
+		
+		Runs a function on the key (in-place), records the new value and returns
+		the result. This function MUST be stable and pure, that is, have no side
+		effects and always return the same result. For example, if you want a
+		timestamp, get it first and supply as a Param.
+		
+	The common suffixes for function names are:
+		
+		_v - return Value or Result, fail on false
+		_a - asynchronous
+		_n - no reply expected
+		
+Other modules are
+
+	fission_once - caches values in the process dictionary, useful for
+	short-term processes that don't need latest data
+	
+	Incomplete interfaces to basic types:
+	fission_list
+	fission_tuple
+	fission_tree - gb_trees
+	fission_set - gb_sets
+	
+	fission_zset - Redis sorted set imitation - a tree sorted by value
+	
+Also provided:
+	zset (used by fission_zset)
+	wtset (used by zset)
+	
+
+ADMINISTRATION
+
+Currently a minefield.
+
+
+INTERNALS
+
+Why don't you just read the source.
+
+
+CONFIGURATION
+
+Why don't you just edit the source.
+
+
+BENCHMARKS
+
+Out of date. Should be tens of thousands of something per seconds per core or
+something like that.
+
+
+SUPPORT
+
+If you have any questions or need moral support, please contact Danko Alexeyev:
+	Virtuall @ Freenode
+	danko at very dot lv
+	see http://virtuall.info for elsewhere
+	
+If you've done something with fission and it actually works, please please tell
+me (and the world!).
